@@ -1,0 +1,17 @@
+# Environment variables
+.env
+**/.env
+
+# Eclipse / STS
+.metadata/
+**/.metadata/
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache/
+
+# Maven build output
+target/
+**/target/
