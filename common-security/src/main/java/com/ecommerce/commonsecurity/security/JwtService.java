@@ -21,11 +21,6 @@ public class JwtService {
 
 	private SecretKey getSigningKey() {
 
-	    System.out.println("=================================");
-	    System.out.println("JWT SECRET: " + jwtProperties.getSecret());
-	    System.out.println("JWT SECRET LENGTH: " + jwtProperties.getSecret().length());
-	    System.out.println("=================================");
-
 	    return Keys.hmacShaKeyFor(
 	            jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)
 	    );

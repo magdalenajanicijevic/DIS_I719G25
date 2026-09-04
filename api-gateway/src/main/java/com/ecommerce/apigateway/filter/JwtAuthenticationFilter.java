@@ -35,7 +35,6 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 		String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-
 			return exceptionHandler.writeError(exchange, HttpStatus.UNAUTHORIZED,
 					"Missing or invalid Authorization header.");
 		}
@@ -47,16 +46,14 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 			String username = jwtService.extractUsername(token);
 
 			if (!jwtService.isTokenValid(token, username)) {
-
 				return exceptionHandler.writeError(exchange, HttpStatus.UNAUTHORIZED, "Invalid JWT token.");
 			}
 
 			String role = jwtService.extractRole(token);
 
-			String path = exchange.getRequest().getURI().getPath();
+			String requestPath = exchange.getRequest().getURI().getPath();
 
-			if (!routeAuthorization.isAuthorized(path, exchange.getRequest().getMethod(), role)) {
-
+			if (!routeAuthorization.isAuthorized(requestPath, exchange.getRequest().getMethod(), role)) {
 				return exceptionHandler.writeError(exchange, HttpStatus.FORBIDDEN, "Access denied.");
 			}
 
@@ -67,7 +64,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 				headers.remove("X-User-Role");
 				headers.remove("X-User-Email");
 			}).header("X-User-Id", userId).header("X-User-Role", role).header("X-User-Email", username).build();
-			
+
 			return chain.filter(exchange.mutate().request(request).build());
 
 		} catch (Exception ex) {
