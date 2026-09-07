@@ -81,7 +81,8 @@ jobs:
       - name: Run tests
         working-directory: ${{ matrix.service }}
         run: ./mvnw clean test
-        
+
+
   docker-build-and-push:
     name: Build and Push Docker Image - ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -131,3 +132,89 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: self-hosted
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    needs:
+      - docker-build-and-push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Kubernetes namespace
+        shell: powershell
+        run: |
+          kubectl apply -f deployment/kubernetes/namespace.yml
+
+      - name: Create Kubernetes secret
+        shell: powershell
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RABBITMQ_USERNAME: ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+        run: |
+          kubectl create secret generic ecommerce-secrets `
+            --namespace ecommerce `
+            --from-literal="DB_PASSWORD=$env:DB_PASSWORD" `
+            --from-literal="JWT_SECRET=$env:JWT_SECRET" `
+            --from-literal="RABBITMQ_USERNAME=$env:RABBITMQ_USERNAME" `
+            --from-literal="RABBITMQ_PASSWORD=$env:RABBITMQ_PASSWORD" `
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply infrastructure
+        shell: powershell
+        run: |
+          kubectl apply -f deployment/kubernetes/infrastructure/postgres.yml
+          kubectl apply -f deployment/kubernetes/infrastructure/rabbitmq.yml
+
+      - name: Apply core components
+        shell: powershell
+        run: |
+          kubectl apply -f deployment/kubernetes/core
+
+      - name: Apply business services
+        shell: powershell
+        run: |
+          kubectl apply -f deployment/kubernetes/services
+
+      - name: Update application images
+        shell: powershell
+        run: |
+          kubectl set image deployment/discovery-server discovery-server=${{ secrets.DOCKERHUB_USERNAME }}/discovery-server:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/config-server config-server=${{ secrets.DOCKERHUB_USERNAME }}/config-server:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/api-gateway api-gateway=${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ github.sha }} -n ecommerce
+
+          kubectl set image deployment/user-service user-service=${{ secrets.DOCKERHUB_USERNAME }}/user-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/product-service product-service=${{ secrets.DOCKERHUB_USERNAME }}/product-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/inventory-service inventory-service=${{ secrets.DOCKERHUB_USERNAME }}/inventory-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/order-service order-service=${{ secrets.DOCKERHUB_USERNAME }}/order-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/payment-service payment-service=${{ secrets.DOCKERHUB_USERNAME }}/payment-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/review-service review-service=${{ secrets.DOCKERHUB_USERNAME }}/review-service:${{ github.sha }} -n ecommerce
+          kubectl set image deployment/notification-service notification-service=${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }} -n ecommerce
+
+      - name: Check deployment status
+        shell: powershell
+        run: |
+          kubectl rollout status deployment/discovery-server -n ecommerce
+          kubectl rollout status deployment/config-server -n ecommerce
+          kubectl rollout status deployment/api-gateway -n ecommerce
+
+          kubectl rollout status deployment/user-service -n ecommerce
+          kubectl rollout status deployment/product-service -n ecommerce
+          kubectl rollout status deployment/inventory-service -n ecommerce
+          kubectl rollout status deployment/order-service -n ecommerce
+          kubectl rollout status deployment/payment-service -n ecommerce
+          kubectl rollout status deployment/review-service -n ecommerce
+          kubectl rollout status deployment/notification-service -n ecommerce
+
+      - name: Check Kubernetes pods
+        shell: powershell
+        run: |
+          kubectl get pods -n ecommerce
