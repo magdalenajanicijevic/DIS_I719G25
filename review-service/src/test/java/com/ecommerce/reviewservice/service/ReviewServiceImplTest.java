@@ -79,7 +79,7 @@ class ReviewServiceImplTest {
 		when(reviewRepository.existsByUserIdAndProductId(10L, 100L)).thenReturn(false);
 		when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
-		ReviewResponse response = reviewService.createReview(createRequest);
+		ReviewResponse response = reviewService.createReview(createRequest, 10L);
 
 		assertNotNull(response);
 		assertEquals(1L, response.getId());
@@ -103,7 +103,7 @@ class ReviewServiceImplTest {
 		when(reviewRepository.existsByUserIdAndProductId(10L, 100L)).thenReturn(false);
 		when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
-		reviewService.createReview(createRequest);
+		reviewService.createReview(createRequest, 10L);
 
 		ArgumentCaptor<Review> captor = ArgumentCaptor.forClass(Review.class);
 
@@ -122,7 +122,7 @@ class ReviewServiceImplTest {
 		when(orderClient.hasPurchasedProduct(10L, 100L)).thenReturn(false);
 
 		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> reviewService.createReview(createRequest));
+				() -> reviewService.createReview(createRequest, 10L));
 
 		assertEquals("User has not purchased this product.", exception.getMessage());
 
@@ -141,7 +141,7 @@ class ReviewServiceImplTest {
 		when(reviewRepository.existsByUserIdAndProductId(10L, 100L)).thenReturn(true);
 
 		ConflictException exception = assertThrows(ConflictException.class,
-				() -> reviewService.createReview(createRequest));
+				() -> reviewService.createReview(createRequest, 10L));
 
 		assertEquals("Review for this product already exists.", exception.getMessage());
 
@@ -159,7 +159,7 @@ class ReviewServiceImplTest {
 		when(reviewRepository.existsByUserIdAndProductId(10L, 100L)).thenReturn(false);
 		when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
-		reviewService.createReview(createRequest);
+		reviewService.createReview(createRequest, 10L);
 
 		var inOrder = org.mockito.Mockito.inOrder(userClient, productClient, orderClient, reviewRepository);
 
@@ -176,7 +176,7 @@ class ReviewServiceImplTest {
 
 		doThrow(exception).when(productClient).getProductById(100L);
 
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> reviewService.createReview(createRequest));
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> reviewService.createReview(createRequest, 10L));
 
 		assertEquals("Product not found.", thrown.getMessage());
 

@@ -66,20 +66,20 @@ class AuthServiceImplTest {
 	@Test
 	void login_shouldReturnJwtToken_whenCredentialsAreValid() {
 
-		when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.of(user));
+		when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
 
-		when(passwordEncoder.matches(loginRequest.password(), user.getPassword())).thenReturn(true);
+		when(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())).thenReturn(true);
 
 		when(jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().name())).thenReturn("jwt-token");
 
 		LoginResponse response = authService.login(loginRequest);
 
 		assertNotNull(response);
-		assertEquals("jwt-token", response.token());
+		assertEquals("jwt-token", response.getToken());
 
-		verify(userRepository).findByEmail(loginRequest.email());
+		verify(userRepository).findByEmail(loginRequest.getEmail());
 
-		verify(passwordEncoder).matches(loginRequest.password(), user.getPassword());
+		verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
 
 		verify(jwtService).generateToken(user.getEmail(), user.getId(), user.getRole().name());
 	}
@@ -87,13 +87,13 @@ class AuthServiceImplTest {
 	@Test
 	void login_shouldThrowException_whenEmailDoesNotExist() {
 
-		when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.empty());
+		when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
 		BadRequestException exception = assertThrows(BadRequestException.class, () -> authService.login(loginRequest));
 
 		assertEquals("Invalid email or password.", exception.getMessage());
 
-		verify(userRepository).findByEmail(loginRequest.email());
+		verify(userRepository).findByEmail(loginRequest.getEmail());
 
 		verify(passwordEncoder, never()).matches(any(), any());
 
@@ -103,17 +103,17 @@ class AuthServiceImplTest {
 	@Test
 	void login_shouldThrowException_whenPasswordIsIncorrect() {
 
-		when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.of(user));
+		when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
 
-		when(passwordEncoder.matches(loginRequest.password(), user.getPassword())).thenReturn(false);
+		when(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())).thenReturn(false);
 
 		BadRequestException exception = assertThrows(BadRequestException.class, () -> authService.login(loginRequest));
 
 		assertEquals("Invalid email or password.", exception.getMessage());
 
-		verify(userRepository).findByEmail(loginRequest.email());
+		verify(userRepository).findByEmail(loginRequest.getEmail());
 
-		verify(passwordEncoder).matches(loginRequest.password(), user.getPassword());
+		verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
 
 		verify(jwtService, never()).generateToken(any(), any(), any());
 	}
@@ -121,9 +121,9 @@ class AuthServiceImplTest {
 	@Test
 	void login_shouldGenerateTokenWithCorrectUserData() {
 
-		when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.of(user));
+		when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
 
-		when(passwordEncoder.matches(loginRequest.password(), user.getPassword())).thenReturn(true);
+		when(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())).thenReturn(true);
 
 		when(jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().name())).thenReturn("jwt-token");
 

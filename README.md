@@ -236,7 +236,9 @@ Aplikacija se može pokrenuti lokalno korišćenjem Docker Compose-a ili u Kuber
 
 ### Docker Compose
 
-Za lokalno pokretanje sistema koristi se Docker Compose konfiguracija. Pre pokretanja aplikacije potrebno je kreirati .env fajl na osnovu fajla .env.example, koji se nalazi u direktorijumu deployment/docker, i definisati potrebne promenljive okruženja. One uključuju podatke za PostgreSQL, RabbitMQ, JWT konfiguraciju i Grafana SMTP podešavanja.
+Za lokalno pokretanje sistema koristi se Docker Compose konfiguracija, koja omogućava pokretanje celokupnog sistema u kontejnerima bez potrebe za zasebnim pokretanjem pojedinačnih mikroservisa.
+
+Pre pokretanja aplikacije potrebno je kreirati .env fajl na osnovu fajla .env.example, koji se nalazi u direktorijumu deployment/docker, i definisati potrebne promenljive okruženja. One uključuju podatke za PostgreSQL, RabbitMQ, JWT konfiguraciju i Grafana SMTP podešavanja.
 
 Kompletan sistem se pokreće komandom:
 
@@ -254,7 +256,9 @@ Kubernetes konfiguracija nalazi se u direktorijumu:
 deployment/kubernetes
 ```
 
-Aplikacija se pokreće unutar posebnog Kubernetes namespace-a `ecommerce`. Pre primene Kubernetes konfiguracije potrebno je podesiti poverljive podatke koji se koriste u sistemu. Primer konfiguracije nalazi se u fajlu:
+Aplikacija se pokreće unutar posebnog Kubernetes namespace-a `ecommerce`. Svi poslovni mikroservisi su izloženi isključivo unutar Kubernetes klastera korišćenjem tipa servisa ClusterIP, dok je API Gateway jedina komponenta dostupna spolja korišćenjem tipa servisa LoadBalancer. Na ovaj način spoljni zahtevi ulaze u sistem preko API Gateway-a, koji predstavlja centralnu tačku za autentifikaciju i kontrolu pristupa.
+
+ Pre primene Kubernetes konfiguracije potrebno je podesiti poverljive podatke koji se koriste u sistemu. Primer konfiguracije nalazi se u fajlu:
 
 ```text
 deployment/kubernetes/infrastructure/secret.example.yml
@@ -287,7 +291,7 @@ U Kubernetes okruženju, Swagger UI se može pregledati korišćenjem `kubectl p
 
 CI/CD pipeline je implementiran korišćenjem GitHub Actions-a i pokreće se prilikom push i pull request događaja prema main grani.
 
-Pipeline je organizovan u nekoliko faza. Prvo se izvršavaju build i testovi za common-security modul. Nakon toga se korišćenjem matrix strategije paralelno pokreću build i testovi za sve mikroservise i Spring Cloud komponente. Servisi koji koriste common-security prethodno instaliraju ovaj modul u lokalni Maven repozitorijum.
+Pipeline je organizovan u nekoliko faza. common-security modul se gradi i testira u zasebnom jobu, dok se build i testovi mikroservisa i Spring Cloud komponenti izvršavaju kroz matrix strategiju, koja omogućava paralelnu obradu pojedinačnih servisa. Servisi koji koriste common-security prethodno instaliraju ovaj modul u lokalni Maven repozitorijum.
 
 Prilikom pull request događaja pipeline se završava nakon uspešnog build-a i testiranja. Docker slike se ne kreiraju niti objavljuju.
 

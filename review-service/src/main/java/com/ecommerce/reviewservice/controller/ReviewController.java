@@ -32,11 +32,7 @@ public class ReviewController {
 	public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody CreateReviewRequest request,
 			@RequestHeader("X-User-Id") Long currentUserId) {
 
-		if (!request.userId().equals(currentUserId)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-		}
-
-		ReviewResponse response = reviewService.createReview(request);
+		ReviewResponse response = reviewService.createReview(request, currentUserId);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}

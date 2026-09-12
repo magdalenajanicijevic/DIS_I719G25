@@ -19,6 +19,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.ecommerce.notificationservice.exception.ForbiddenException;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.ecommerce.notificationservice.dto.NotificationResponse;
 import com.ecommerce.notificationservice.entity.Notification;
@@ -85,7 +87,7 @@ class NotificationServiceImplTest {
 	void getNotificationById_shouldReturnNotificationSuccessfully() {
 		when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
 
-		NotificationResponse response = notificationService.getNotificationById(1L);
+		NotificationResponse response = notificationService.getNotificationById(1L, "ADMIN");
 
 		assertNotNull(response);
 		assertEquals(1L, response.getId());
@@ -103,7 +105,7 @@ class NotificationServiceImplTest {
 		when(notificationRepository.findById(1L)).thenReturn(Optional.empty());
 
 		NotificationNotFoundException exception = assertThrows(NotificationNotFoundException.class,
-				() -> notificationService.getNotificationById(1L));
+				() -> notificationService.getNotificationById(1L, "ADMIN"));
 
 		assertEquals("Notification not found with id: 1", exception.getMessage());
 
@@ -119,7 +121,7 @@ class NotificationServiceImplTest {
 
 		when(notificationRepository.findAll()).thenReturn(List.of(notification, secondNotification));
 
-		List<NotificationResponse> response = notificationService.getAllNotifications();
+		List<NotificationResponse> response = notificationService.getAllNotifications("ADMIN");
 
 		assertNotNull(response);
 		assertEquals(2, response.size());
@@ -137,7 +139,7 @@ class NotificationServiceImplTest {
 	void getAllNotifications_shouldReturnEmptyList_whenNoNotificationsExist() {
 		when(notificationRepository.findAll()).thenReturn(List.of());
 
-		List<NotificationResponse> response = notificationService.getAllNotifications();
+		List<NotificationResponse> response = notificationService.getAllNotifications("ADMIN");
 
 		assertNotNull(response);
 		assertEquals(0, response.size());
@@ -152,7 +154,7 @@ class NotificationServiceImplTest {
 
 		when(notificationRepository.findByOrderId(100L)).thenReturn(List.of(notification, secondNotification));
 
-		List<NotificationResponse> response = notificationService.getNotificationsByOrderId(100L);
+		List<NotificationResponse> response = notificationService.getNotificationsByOrderId(100L, "ADMIN");
 
 		assertNotNull(response);
 		assertEquals(2, response.size());
@@ -170,11 +172,41 @@ class NotificationServiceImplTest {
 	void getNotificationsByOrderId_shouldReturnEmptyList_whenNoNotificationsExist() {
 		when(notificationRepository.findByOrderId(100L)).thenReturn(List.of());
 
-		List<NotificationResponse> response = notificationService.getNotificationsByOrderId(100L);
+		List<NotificationResponse> response = notificationService.getNotificationsByOrderId(100L, "ADMIN");
 
 		assertNotNull(response);
 		assertEquals(0, response.size());
 
 		verify(notificationRepository).findByOrderId(100L);
+	}
+
+	@Test
+	void getAllNotifications_shouldThrowForbidden_whenCustomer() {
+		ForbiddenException exception = assertThrows(ForbiddenException.class,
+				() -> notificationService.getAllNotifications("CUSTOMER"));
+
+		assertEquals("Only administrators can access notifications.", exception.getMessage());
+
+		verifyNoInteractions(notificationRepository);
+	}
+
+	@Test
+	void getNotificationById_shouldThrowForbidden_whenCustomer() {
+		ForbiddenException exception = assertThrows(ForbiddenException.class,
+				() -> notificationService.getNotificationById(1L, "CUSTOMER"));
+
+		assertEquals("Only administrators can access notifications.", exception.getMessage());
+
+		verifyNoInteractions(notificationRepository);
+	}
+
+	@Test
+	void getNotificationsByOrderId_shouldThrowForbidden_whenCustomer() {
+		ForbiddenException exception = assertThrows(ForbiddenException.class,
+				() -> notificationService.getNotificationsByOrderId(100L, "CUSTOMER"));
+
+		assertEquals("Only administrators can access notifications.", exception.getMessage());
+
+		verifyNoInteractions(notificationRepository);
 	}
 }

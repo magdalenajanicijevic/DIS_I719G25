@@ -1,12 +1,20 @@
 package com.ecommerce.userservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public record LoginRequest(
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginRequest {
 
-		@NotBlank String email,
+	@NotBlank(message = "Email is required.")
+	private String email;
 
-		@NotBlank String password
-
-) {
+	@NotBlank(message = "Password is required.")
+	private String password;
 }

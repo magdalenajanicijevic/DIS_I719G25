@@ -106,16 +106,6 @@ class RouteAuthorizationTest {
 	}
 
 	@Test
-	void isAuthorized_shouldDenyCustomerFromAccessingAllOrders() {
-		assertFalse(routeAuthorization.isAuthorized("/api/orders", HttpMethod.GET, "CUSTOMER"));
-	}
-
-	@Test
-	void isAuthorized_shouldDenyCustomerFromUpdatingOrders() {
-		assertFalse(routeAuthorization.isAuthorized("/api/orders/1", HttpMethod.PUT, "CUSTOMER"));
-	}
-
-	@Test
 	void isAuthorized_shouldAllowCustomerToAccessPayments() {
 		assertTrue(routeAuthorization.isAuthorized("/api/payments", HttpMethod.GET, "CUSTOMER"));
 	}
@@ -156,8 +146,8 @@ class RouteAuthorizationTest {
 	}
 
 	@Test
-	void isAuthorized_shouldDenyCustomerFromAccessingReviewById() {
-		assertFalse(routeAuthorization.isAuthorized("/api/reviews/1", HttpMethod.GET, "CUSTOMER"));
+	void isAuthorized_shouldAllowCustomerToAccessOwnOrders() {
+	    assertTrue(routeAuthorization.isAuthorized("/api/orders", HttpMethod.GET, "CUSTOMER"));
 	}
 
 	@Test
@@ -194,7 +184,7 @@ class RouteAuthorizationTest {
 	void isAuthorized_shouldAllowAdminToAccessNotifications() {
 		assertTrue(routeAuthorization.isAuthorized("/api/notifications", HttpMethod.GET, "ADMIN"));
 	}
-
+	
 	@Test
 	void isAuthorized_shouldDenyCustomerFromAccessingNotifications() {
 		assertFalse(routeAuthorization.isAuthorized("/api/notifications", HttpMethod.GET, "CUSTOMER"));

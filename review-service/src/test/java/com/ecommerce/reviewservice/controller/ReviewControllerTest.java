@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -71,7 +72,7 @@ class ReviewControllerTest {
 
 	@Test
 	void createReview_shouldReturnCreated() throws Exception {
-		when(reviewService.createReview(any(CreateReviewRequest.class))).thenReturn(reviewResponse);
+		when(reviewService.createReview(any(CreateReviewRequest.class), eq(1L))).thenReturn(reviewResponse);
 
 		mockMvc.perform(post("/api/reviews").header("X-User-Id", "1").header("X-User-Role", "CUSTOMER")
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(createRequest)))
@@ -81,7 +82,7 @@ class ReviewControllerTest {
 				.andExpect(jsonPath("$.productId").value(100)).andExpect(jsonPath("$.rating").value(5))
 				.andExpect(jsonPath("$.comment").value("Excellent product."));
 
-		verify(reviewService).createReview(any(CreateReviewRequest.class));
+		verify(reviewService).createReview(any(CreateReviewRequest.class), eq(1L));
 	}
 
 	@Test
@@ -89,11 +90,15 @@ class ReviewControllerTest {
 		CreateReviewRequest request = CreateReviewRequest.builder().userId(2L).productId(100L).rating(5)
 				.comment("Excellent product.").build();
 
+		when(reviewService.createReview(any(CreateReviewRequest.class), eq(1L)))
+				.thenThrow(new ForbiddenException("You can only create a review for yourself."));
+
 		mockMvc.perform(post("/api/reviews").header("X-User-Id", "1").header("X-User-Role", "CUSTOMER")
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isForbidden());
+				.andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403))
+				.andExpect(jsonPath("$.message").value("You can only create a review for yourself."));
 
-		verify(reviewService, org.mockito.Mockito.never()).createReview(any(CreateReviewRequest.class));
+		verify(reviewService).createReview(any(CreateReviewRequest.class), eq(1L));
 	}
 
 	@Test
@@ -105,7 +110,8 @@ class ReviewControllerTest {
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest());
 
-		verify(reviewService, org.mockito.Mockito.never()).createReview(any(CreateReviewRequest.class));
+		verify(reviewService, org.mockito.Mockito.never()).createReview(any(CreateReviewRequest.class),
+				any(Long.class));
 	}
 
 	@Test

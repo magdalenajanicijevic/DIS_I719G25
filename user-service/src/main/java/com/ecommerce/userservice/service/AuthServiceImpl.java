@@ -27,17 +27,16 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public LoginResponse login(LoginRequest request) {
 
-		User user = userRepository.findByEmail(request.email())
+		User user = userRepository.findByEmail(request.getEmail())
 				.orElseThrow(() -> new BadRequestException("Invalid email or password."));
 
-		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new BadRequestException("Invalid email or password.");
 		}
 
 		String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().name());
 
 		return LoginResponse.builder().token(token).build();
-
 	}
 
 	@Override

@@ -7,11 +7,11 @@ import com.ecommerce.notificationservice.event.PaymentSuccessfulEvent;
 
 public interface NotificationService {
 
-    NotificationResponse getNotificationById(Long id);
+    NotificationResponse getNotificationById(Long id, String currentUserRole);
 
-    List<NotificationResponse> getAllNotifications();
+    List<NotificationResponse> getAllNotifications(String currentUserRole);
 
-    List<NotificationResponse> getNotificationsByOrderId(Long orderId);
+    List<NotificationResponse> getNotificationsByOrderId(Long orderId, String currentUserRole);
 
     void createNotification(PaymentSuccessfulEvent event);
 

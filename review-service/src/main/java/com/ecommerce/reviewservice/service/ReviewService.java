@@ -8,8 +8,8 @@ import com.ecommerce.reviewservice.dto.UpdateReviewRequest;
 
 public interface ReviewService {
 
-	ReviewResponse createReview(CreateReviewRequest request);
-
+	ReviewResponse createReview(CreateReviewRequest request, Long currentUserId);
+	
 	ReviewResponse updateReview(Long id, UpdateReviewRequest request, Long currentUserId);
 
 	void deleteReview(Long id, Long currentUserId, String role);

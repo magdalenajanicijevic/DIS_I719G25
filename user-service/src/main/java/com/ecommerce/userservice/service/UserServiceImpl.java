@@ -89,9 +89,6 @@ public class UserServiceImpl implements UserService {
 		user.setLastName(request.getLastName());
 		user.setEmail(request.getEmail());
 
-		/*
-		 * Only administrators are allowed to change user roles.
-		 */
 		if ("ADMIN".equals(currentUserRole)) {
 			user.setRole(request.getRole());
 		}

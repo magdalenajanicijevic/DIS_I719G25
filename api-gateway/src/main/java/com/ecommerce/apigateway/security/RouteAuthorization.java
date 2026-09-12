@@ -22,7 +22,7 @@ public class RouteAuthorization {
 			Map.entry("GET:/api/inventory", List.of("ADMIN")), Map.entry("POST:/api/inventory", List.of("ADMIN")),
 			Map.entry("PUT:/api/inventory", List.of("ADMIN")), Map.entry("DELETE:/api/inventory", List.of("ADMIN")),
 
-			Map.entry("GET:/api/orders", List.of("ADMIN")), Map.entry("POST:/api/orders", List.of("ADMIN", "CUSTOMER")),
+			Map.entry("GET:/api/orders", List.of("ADMIN", "CUSTOMER")), Map.entry("POST:/api/orders", List.of("ADMIN", "CUSTOMER")),
 			Map.entry("PUT:/api/orders", List.of("ADMIN")), Map.entry("DELETE:/api/orders", List.of("ADMIN")),
 
 			Map.entry("GET:/api/payments", List.of("ADMIN", "CUSTOMER")),
@@ -30,7 +30,7 @@ public class RouteAuthorization {
 
 			Map.entry("GET:/api/reviews/product", List.of("ADMIN", "CUSTOMER")),
 			Map.entry("GET:/api/reviews/user", List.of("ADMIN", "CUSTOMER")),
-			Map.entry("GET:/api/reviews", List.of("ADMIN")), Map.entry("POST:/api/reviews", List.of("CUSTOMER")),
+			Map.entry("GET:/api/reviews", List.of("ADMIN", "CUSTOMER")), Map.entry("POST:/api/reviews", List.of("CUSTOMER")),
 			Map.entry("PUT:/api/reviews", List.of("CUSTOMER")),
 			Map.entry("DELETE:/api/reviews", List.of("ADMIN", "CUSTOMER")),
 

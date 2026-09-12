@@ -32,7 +32,11 @@ public class ReviewServiceImpl implements ReviewService {
 	private final OrderClient orderClient;
 
 	@Override
-	public ReviewResponse createReview(CreateReviewRequest request) {
+	public ReviewResponse createReview(CreateReviewRequest request, Long currentUserId) {
+
+		if (!request.userId().equals(currentUserId)) {
+			throw new ForbiddenException("You can only create a review for yourself.");
+		}
 
 		validateCreateReviewRequest(request);
 

@@ -8,6 +8,7 @@ import com.ecommerce.notificationservice.dto.NotificationResponse;
 import com.ecommerce.notificationservice.entity.Notification;
 import com.ecommerce.notificationservice.entity.NotificationStatus;
 import com.ecommerce.notificationservice.event.PaymentSuccessfulEvent;
+import com.ecommerce.notificationservice.exception.ForbiddenException;
 import com.ecommerce.notificationservice.exception.NotificationNotFoundException;
 import com.ecommerce.notificationservice.repository.NotificationRepository;
 
@@ -29,7 +30,9 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
-	public NotificationResponse getNotificationById(Long id) {
+	public NotificationResponse getNotificationById(Long id, String currentUserRole) {
+		
+	    requireAdmin(currentUserRole);
 
 		Notification notification = findNotificationById(id);
 
@@ -37,15 +40,26 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
-	public List<NotificationResponse> getAllNotifications() {
+	public List<NotificationResponse> getAllNotifications(String currentUserRole) {
+		
+	    requireAdmin(currentUserRole);
 
 		return notificationRepository.findAll().stream().map(this::mapToResponse).toList();
 	}
 
 	@Override
-	public List<NotificationResponse> getNotificationsByOrderId(Long orderId) {
+	public List<NotificationResponse> getNotificationsByOrderId(Long orderId, String currentUserRole) {
+
+	    requireAdmin(currentUserRole);
 
 		return notificationRepository.findByOrderId(orderId).stream().map(this::mapToResponse).toList();
+	}
+
+	private void requireAdmin(String currentUserRole) {
+
+		if (!"ADMIN".equals(currentUserRole)) {
+			throw new ForbiddenException("Only administrators can access notifications.");
+		}
 	}
 
 	private Notification findNotificationById(Long id) {

@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.ecommerce.notificationservice.dto.NotificationResponse;
 import com.ecommerce.notificationservice.entity.NotificationStatus;
+import com.ecommerce.notificationservice.exception.ForbiddenException;
 import com.ecommerce.notificationservice.exception.GlobalExceptionHandler;
 import com.ecommerce.notificationservice.exception.NotificationNotFoundException;
 import com.ecommerce.notificationservice.service.NotificationService;
@@ -44,7 +45,7 @@ class NotificationControllerTest {
 
 		NotificationResponse notification = createNotificationResponse();
 
-		when(notificationService.getAllNotifications()).thenReturn(List.of(notification));
+		when(notificationService.getAllNotifications("ADMIN")).thenReturn(List.of(notification));
 
 		mockMvc.perform(
 				get("/api/notifications").header("X-User-Role", "ADMIN").contentType(MediaType.APPLICATION_JSON))
@@ -56,9 +57,13 @@ class NotificationControllerTest {
 	@Test
 	void getAllNotifications_shouldRejectCustomer() throws Exception {
 
+		when(notificationService.getAllNotifications("CUSTOMER"))
+				.thenThrow(new ForbiddenException("Only administrators can access notifications."));
+
 		mockMvc.perform(
 				get("/api/notifications").header("X-User-Role", "CUSTOMER").contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
+				.andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403))
+				.andExpect(jsonPath("$.message").value("Only administrators can access notifications."));
 	}
 
 	@Test
@@ -66,7 +71,7 @@ class NotificationControllerTest {
 
 		NotificationResponse notification = createNotificationResponse();
 
-		when(notificationService.getNotificationById(1L)).thenReturn(notification);
+		when(notificationService.getNotificationById(1L, "ADMIN")).thenReturn(notification);
 
 		mockMvc.perform(
 				get("/api/notifications/1").header("X-User-Role", "ADMIN").contentType(MediaType.APPLICATION_JSON))
@@ -80,15 +85,20 @@ class NotificationControllerTest {
 	@Test
 	void getNotificationById_shouldRejectCustomer() throws Exception {
 
+		when(notificationService.getNotificationById(1L, "CUSTOMER"))
+				.thenThrow(new ForbiddenException("Only administrators can access notifications."));
+
 		mockMvc.perform(
 				get("/api/notifications/1").header("X-User-Role", "CUSTOMER").contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
+				.andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403))
+				.andExpect(jsonPath("$.message").value("Only administrators can access notifications."));
+
 	}
 
 	@Test
 	void getNotificationById_shouldReturnNotFound() throws Exception {
 
-		when(notificationService.getNotificationById(999L))
+		when(notificationService.getNotificationById(999L, "ADMIN"))
 				.thenThrow(new NotificationNotFoundException("Notification not found with id: 999"));
 
 		mockMvc.perform(
@@ -102,7 +112,7 @@ class NotificationControllerTest {
 
 		NotificationResponse notification = createNotificationResponse();
 
-		when(notificationService.getNotificationsByOrderId(100L)).thenReturn(List.of(notification));
+		when(notificationService.getNotificationsByOrderId(100L, "ADMIN")).thenReturn(List.of(notification));
 
 		mockMvc.perform(get("/api/notifications/order/100").header("X-User-Role", "ADMIN")
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
@@ -113,15 +123,19 @@ class NotificationControllerTest {
 	@Test
 	void getNotificationsByOrderId_shouldRejectCustomer() throws Exception {
 
+		when(notificationService.getNotificationsByOrderId(100L, "CUSTOMER"))
+				.thenThrow(new ForbiddenException("Only administrators can access notifications."));
+
 		mockMvc.perform(get("/api/notifications/order/100").header("X-User-Role", "CUSTOMER")
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden())
-				.andExpect(jsonPath("$.status").value(403));
+				.andExpect(jsonPath("$.status").value(403))
+				.andExpect(jsonPath("$.message").value("Only administrators can access notifications."));
 	}
 
 	@Test
 	void getNotificationsByOrderId_shouldReturnEmptyList() throws Exception {
 
-		when(notificationService.getNotificationsByOrderId(999L)).thenReturn(List.of());
+		when(notificationService.getNotificationsByOrderId(999L, "ADMIN")).thenReturn(List.of());
 
 		mockMvc.perform(get("/api/notifications/order/999").header("X-User-Role", "ADMIN")
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
